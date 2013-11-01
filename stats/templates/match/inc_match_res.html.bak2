@@ -1,0 +1,300 @@
+<div class='inc_scripts'>
+<script type="text/javascript" src="/static/admin/js/jquery.js"></script>
+<script>
+    keke = function(objStr) {
+        var saveUrl = '{% url 'ajax_stat_set_match_player' %}';
+        var params = {};
+        params.match_id   = {{match.pk}};
+        params.team_id    = {{match.blue_team.pk}};
+        params.pos        = $(objStr.tr).attr('id');
+        params.player     = $(objStr.player).val();
+        params.cs         = $(objStr.cs).val();
+        params.gold       = $(objStr.gold).val();
+        params.kill       = $(objStr.kill).val();
+        params.death      = $(objStr.death).val();
+        params.assist     = $(objStr.assist).val();
+        params.mvp_point  = $(objStr.mvp_point).val();
+            
+        $.get(saveUrl , params , function(data){
+            if( data.indexOf('success') <=0 ) {
+                alert('fail');
+            }
+            else{
+                alert('success');
+            }
+            } );
+    }
+    $(document).ready(function(){
+        
+        $('.statsForMatch').change(function(){
+            $('#statsForMatchChanged').val('change');
+        });
+        
+        $('.mvp_candidate').hide();
+        
+        $('select[name=winner]').change(function(){
+            
+            var _this = $(this);
+            var winTeam = _this.find('option[selected]');
+            $('.mvp_candidate').hide();
+            
+            if( winTeam.hasClass('winner_b') ) {
+                $('.mvp_candidate.blue').show();
+            }
+            else if( winTeam.hasClass('winner_p') ) {
+                $('.mvp_candidate.purple').show();
+            }
+        });
+        
+        $('#btn_save_match_result').click(function(){
+            var url = '{% url 'ajax_stat_set_match_result' %}';
+            var params = $('#ifm_form').serialize();
+            
+            $.get(url , params , function(data){
+                if( data.indexOf('success') <= 0 ) {
+                    alert('failed');
+                }
+                else {
+                    alert('success');
+                }
+            });
+        });
+        
+        // match_result 기본값 셋팅.
+        $('#ifm_form select[name=winner]').val( '{{match.winner.pk}}' );
+        $('select[name=winner]').change();
+        $('#ifm_form input[name=play_time]').val( '{{match.play_time}}' );
+        $('#ifm_form select[name=mvp]').val( '{{match.mvp.pk}}' );
+        $('#ifm_form select[name=blue_ban1]').val( '{{match.blue_ban1.pk}}' );
+        $('#ifm_form select[name=blue_ban2]').val( '{{match.blue_ban2.pk}}' );
+        $('#ifm_form select[name=blue_ban3]').val( '{{match.blue_ban3.pk}}' );
+        $('#ifm_form select[name=purple_ban1]').val( '{{match.purple_ban1.pk}}' );
+        $('#ifm_form select[name=purple_ban2]').val( '{{match.purple_ban2.pk}}' );
+        $('#ifm_form select[name=purple_ban3]').val( '{{match.purple_ban3.pk}}' );
+        
+        // match_player 셀렉트 박스 셋팅.
+        $('select.match_player.blue').html('');
+        {% for a in b_players %}
+        $('select.match_player.blue').append( $('<option>').text('{{a}}').val('{{a.pk}}') );
+        {% endfor %}
+        $('select.match_player.purple').html('');
+        {% for a in p_players %}
+        $('select.match_player.purple').append( $('<option>').text('{{a}}').val('{{a.pk}}') );
+        {% endfor %}
+        
+        // match_player 기본값 셋팅 및 저장 버튼 이벤트.
+        
+        {% for mp in bmps %}
+        var objBStr{{mp.i}} = new Object();
+        objBStr{{mp.i}}.tr        = 'tr#MpBlue{{mp.str}}';
+        objBStr{{mp.i}}.player    = 'tr#MpBlue{{mp.str}}' + ' select.match_player';
+        objBStr{{mp.i}}.cs        = 'tr#MpBlue{{mp.str}}' + ' input[name=cs]';
+        objBStr{{mp.i}}.gold      = 'tr#MpBlue{{mp.str}}' + ' input[name=gold]';
+        objBStr{{mp.i}}.kill      = 'tr#MpBlue{{mp.str}}' + ' input[name=kill]';
+        objBStr{{mp.i}}.death     = 'tr#MpBlue{{mp.str}}' + ' input[name=death]';
+        objBStr{{mp.i}}.assist    = 'tr#MpBlue{{mp.str}}' + ' input[name=assist]';
+        objBStr{{mp.i}}.mvp_point = 'tr#MpBlue{{mp.str}}' + ' input[name=mvp_point]';
+        objBStr{{mp.i}}.btns      = 'tr#MpBlue{{mp.str}}' + ' input[type=button]';
+
+        // 페이지 초기화시 기본값 저장.
+        $(objBStr{{mp.i}}.player).val('{{mp.o.player.pk}}');
+        $(objBStr{{mp.i}}.cs).val('{{mp.o.cs}}'?'{{mp.o.cs}}':'0');
+        $(objBStr{{mp.i}}.gold).val('{{mp.o.gold}}'?'{{mp.o.gold}}':'0');
+        $(objBStr{{mp.i}}.kill).val('{{mp.o.kill}}'?'{{mp.o.kill}}':'0');
+        $(objBStr{{mp.i}}.death).val('{{mp.o.death}}'?'{{mp.o.death}}':'0');
+        $(objBStr{{mp.i}}.assist).val('{{mp.o.assist}}'?'{{mp.o.assist}}':'0');
+        $(objBStr{{mp.i}}.mvp_point).val('{{mp.o.mvp_point}}'?'{{mp.o.mvp_point}}':'0');
+
+        $(objBStr{{mp.i}}.btns).click(function(){
+            keke(objBStr{{mp.i}});            
+        });
+        {% endfor %}
+        
+        {% for mp in pmps %}
+        var objPStr{{mp.i}} = new Object();
+        objPStr{{mp.i}}.tr        = 'tr#MpPurple{{mp.str}}';
+        objPStr{{mp.i}}.player    = 'tr#MpPurple{{mp.str}}' + ' select.match_player';
+        objPStr{{mp.i}}.cs        = 'tr#MpPurple{{mp.str}}' + ' input[name=cs]';
+        objPStr{{mp.i}}.gold      = 'tr#MpPurple{{mp.str}}' + ' input[name=gold]';
+        objPStr{{mp.i}}.kill      = 'tr#MpPurple{{mp.str}}' + ' input[name=kill]';
+        objPStr{{mp.i}}.death     = 'tr#MpPurple{{mp.str}}' + ' input[name=death]';
+        objPStr{{mp.i}}.assist    = 'tr#MpPurple{{mp.str}}' + ' input[name=assist]';
+        objPStr{{mp.i}}.mvp_point = 'tr#MpPurple{{mp.str}}' + ' input[name=mvp_point]';
+        objPStr{{mp.i}}.btns      = 'tr#MpPurple{{mp.str}}' + ' input[type=button]';
+
+        // 페이지 초기화시 기본값 저장.
+        $(objPStr{{mp.i}}.player).val('{{mp.o.player.pk}}');
+        $(objPStr{{mp.i}}.cs).val('{{mp.o.cs}}'?'{{mp.o.cs}}':'0');
+        $(objPStr{{mp.i}}.gold).val('{{mp.o.gold}}'?'{{mp.o.gold}}':'0');
+        $(objPStr{{mp.i}}.kill).val('{{mp.o.kill}}'?'{{mp.o.kill}}':'0');
+        $(objPStr{{mp.i}}.death).val('{{mp.o.death}}'?'{{mp.o.death}}':'0');
+        $(objPStr{{mp.i}}.assist).val('{{mp.o.assist}}'?'{{mp.o.assist}}':'0');
+        $(objPStr{{mp.i}}.mvp_point).val('{{mp.o.mvp_point}}'?'{{mp.o.mvp_point}}':'0');
+
+        $(objPStr{{mp.i}}.btns).click(function(){
+            keke(objPStr{{mp.i}});            
+        });
+        {% endfor %}
+        
+
+        
+    });
+              
+</script>
+</div>
+
+<div class='module'>
+    <form id="ifm_form">
+        <input type="hidden" name="match_id" value="{{match.pk}}" />
+    <h2 id="ifmHead">{{match}} 경기 결과 입력.</h2>
+    <table>
+    <thead>
+    <tr>
+    <th><label>승리팀</label></th>
+    <th><label>플레이타임</label></th>
+    <th><label>MVP</label></th>
+    <th><label>Blue BAN</label></th>
+    <th><label>Purple BAN</label></th>
+    </tr>
+    <tr>
+    <td>
+        <select name="winner">
+        <option value="">----</option>
+        <option class="winner_b" value="{{match.blue_team.team_id}}">{{match.blue_team}}</option>
+        <option class="winner_p" value="{{match.purple_team.team_id}}">{{match.purple_team}}</option>
+        </select>
+    </td>
+    <td>
+        <input name="play_time" type="text" maxlength="5" size="5" value="0" />
+    </td>
+    <td>
+        <select name="mvp">
+            <option value="">----</option>
+            {% for player in b_players %}
+            <option class='mvp_candidate blue' value='{{player.pk}}'>{{player}}</option>
+            {% endfor %}
+            
+            {% for player in p_players %}
+            <option class='mvp_candidate purple' value='{{player.pk}}'>{{player}}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select class="champ_ban blue" name="blue_ban1">
+        {% for champ in champList %}
+        <option value='{{champ.pk}}'>{{champ}}</option>
+        {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select class="champ_ban purple" name="purple_ban1">
+        {% for champ in champList %}
+        <option value='{{champ.pk}}'>{{champ}}</option>
+        {% endfor %}
+        </select>
+    </td>
+    </tr>
+    <tr>
+        <td></td><td></td><td></td>
+        <td>
+        <select class="champ_ban blue" name="blue_ban2">
+        {% for champ in champList %}
+        <option value='{{champ.pk}}'>{{champ}}</option>
+        {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select class="champ_ban purple" name="purple_ban2">
+        {% for champ in champList %}
+        <option value='{{champ.pk}}'>{{champ}}</option>
+        {% endfor %}
+        </select>
+    </td>
+    </tr>
+    <tr>
+        <td></td><td></td><td></td>
+        <td>
+        <select class="champ_ban blue" name="blue_ban3">
+        {% for champ in champList %}
+        <option value='{{champ.pk}}'>{{champ}}</option>
+        {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select class="champ_ban purple" name="purple_ban3">
+        {% for champ in champList %}
+        <option value='{{champ.pk}}'>{{champ}}</option>
+        {% endfor %}
+        </select>
+    </td>
+    </tr>        
+    </thead>
+    <tfoot>
+    <tr>
+    <td colspan="5">
+    <input type="button" value="결과 입력" id="btn_save_match_result" /> 
+    </td>
+    </tr>
+    </tfoot>
+    
+    </table>
+    </form>
+</div>
+
+<div class='module'>
+    <h2 id="ifmHead">{{match}} 경기 선수 데이터 입력.</h2>
+    <table>
+    <caption>Blue Team</caption>
+    <thead>
+    <tr height="30px">
+    {% for desc in mp_desc %}
+    <th><label>{{desc}}</label></th>
+    {% endfor %}
+    <th style="vertical-align:middle; width:100%;"></th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for pos in positons %}
+    <tr id='MpBlue{{pos}}'>
+        <td><label>{{pos}}</label>
+        </td>
+        <td>
+            <select name='player' class='match_player blue statsForMatch'>
+            </select>
+        </td>
+        {% for in in mp_input_name %}
+        <td><input type="text" maxlength="5" size="5" name="{{in}}" value="0" class='statsForMatch' /></td>
+        {% endfor %}
+        <td><input type="button" value="save" /></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    <table>
+    <caption>Purple Team</caption>
+    <thead>
+    <tr height="30px">
+    {% for desc in mp_desc %}
+    <th><label>{{desc}}</label></th>
+    {% endfor %}
+    <th style="vertical-align:middle; width:100%;"></th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for pos in positons %}
+    <tr id='MpPurple{{pos}}'>
+    <td><label>{{pos}}</label>
+    </td>
+    <td>
+        <select name='player' class='match_player purple statsForMatch'>
+        </select>
+    </td>
+    {% for in in mp_input_name %}
+    <td><input type="text" maxlength="5" size="5" name="{{in}}" value="0" class="statsForMatch" /></td>
+    {% endfor %}
+    <td><input type="button" value="save" /></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+</div>

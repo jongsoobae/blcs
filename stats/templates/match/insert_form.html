@@ -1,0 +1,155 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static admin_list %}
+{% load admin_urls %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}" />
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+  {% if cl.formset or action_form %}
+    <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+  {% endif %}
+  {{ media.css }}
+  {% if not actions_on_top and not actions_on_bottom %}
+    <style>
+      #changelist table thead th:first-child {width: inherit}
+      table thead th { height:30px; }
+      table thead th , td { vertical-align : middle; }
+    </style>
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ media.js }}
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+<script>
+    
+    function mpResult() {
+    }
+    
+    $(document).ready(function(){
+        
+        var season_id = '{{season_id}}';
+        var match_id = '{{match_id}}';
+        
+        var sel_season = $('select[name=season]');
+        var sel_match = $('select[name=match]');
+        
+        sel_season.val(season_id);
+        sel_match.val(match_id);
+        
+        viewMatchResultDiv(match_id);
+        
+        sel_season.change(function(){
+            onChangeSeason( this.value );
+        });
+        
+        sel_match.change(function(){
+            onChangeMatch( this.value );
+        });
+        
+    });
+    
+    viewMatchResultDiv = function(match_id) {
+        var url = '{% url "match_result_matchresult_form" %}?match_id=' + match_id;
+        if(!match_id) {
+            $('#ifMatchDiv').html('');
+            return;
+        }
+            
+        $.get(url , {} , function(data){
+            $('#ifMatchDiv').html(data);
+            
+        } );
+    }
+    
+    changeConFirmMsg = function(){
+        var sel_season = $('select[name=season]');
+        var sel_match = $('select[name=match]');
+        
+        console.log( $('#statsForMatchChanged').attr('class') );
+        
+        var ccf = $('#statsForMatchChanged').attr('class');
+        
+        
+        if( ccf && $('#statsForMatchChanged').attr('class') != '' ) {
+            if( !confirm('변경된 값을 저장하지 않았습니다. 다른 경기로 이동하시겠습니까? ') ) {
+                sel_season.val( '{{season_id}}' );
+                sel_match.val( '{{match_id}}' );
+                return false;
+            }
+        }
+        return true;
+    }
+        
+    onChangeSeason = function() {
+        var season_id = $('select[name=season]').val();
+        changePage(season_id , '');
+    }
+    
+    onChangeMatch = function() {
+        var season_id = $('select[name=season]').val();
+        var match_id = $('select[name=match]').val();
+        changePage(season_id , match_id);
+    }
+    
+    changePage = function(season_id , match_id){
+        if (!changeConFirmMsg()) {
+            return;
+        }
+        
+        var url = '{% url "match_result_insert_form" %}?season_id=' + season_id + '&match_id=' + match_id;
+        location.href = url;
+    }
+    
+    getJsonObj = function( data ) {
+        var jsonObj = eval('('+data+')');
+        if( jsonObj.result.length < 1 ) return false;
+        
+        return jsonObj.result;
+        
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <form enctype="multipart/form-data" method="post" id="match_player_form">
+    <input type='hidden' id='statsForMatchChanged' value='' />
+    <div class="module aligned">
+    <h2>시즌 , 경기를 선택하세요.</h2>
+        <table >
+        <thead>
+        <tr>
+        <th>
+            <label for="id_season" class="required">Season:</label>
+            <select id="id_season" name="season">
+                <option value=''>----</option>
+                {% if seasonList %}
+                {% for season in seasonList %}
+                <option value='{{season.season_id}}'>{{season.season_no}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+        </th>
+        <th>
+            <label for="id_match" class="required">경기:</label>
+            <select id="id_match" name="match">
+                <option value=''>----</option>
+                {% if matchList %}
+                {% for match in matchList %}
+                <option value='{{match.match_id}}'>{{match}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+        </th>
+        </tr>
+        </thead>
+        </table>
+    </div>
+    <div id="ifMatchDiv">
+    </div>
+    </form>
+</div>
+{% endblock %}
